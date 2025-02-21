@@ -1,4 +1,5 @@
-from enum import Enum, StrEnum
+from enum import Enum
+from strenum import StrEnum
 
 
 class EnumBase(Enum):
