@@ -1,10 +1,11 @@
 from typing import Optional
 
 import jwt
-from fastapi import Depends, Header, HTTPException, Request
+from fastapi import FastAPI, Depends, Header, HTTPException, Request
+from fastapi.routing import APIRoute
 
 from app.core.ctx import CTX_USER_ID
-from app.models import Role, User
+from app.models import Role, User, Api
 from app.settings import settings
 
 
@@ -48,6 +49,15 @@ class PermissionControl:
         if (method, path) not in permission_apis:
             raise HTTPException(status_code=403, detail=f"Permission denied method:{method} path:{path}")
 
+class SQLControl:
+    @classmethod
+    async def has_sql_log(cls, request: Request) -> None:
+        try:
+            api = await Api.filter(path=request.url.path, method=request.method).first()
+            return api and "sql_log" in api.tags
+        except Exception as e:
+            pass
 
 DependAuth = Depends(AuthControl.is_authed)
 DependPermisson = Depends(PermissionControl.has_permission)
+DependSQL = Depends(SQLControl.has_sql_log)
