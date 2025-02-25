@@ -163,7 +163,7 @@ async def init_menus():
         await Menu.bulk_create(children_menu)
         await Menu.create(
             menu_type=MenuType.MENU,
-            name="一级菜单",
+            name="source",
             path="/top-menu",
             order=2,
             parent_id=0,

@@ -1,94 +1,71 @@
 import os
 import typing
-
-from pydantic_settings import BaseSettings
-
+import json
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    VERSION: str = "0.1.0"
-    APP_TITLE: str = "Vue FastAPI Admin"
-    PROJECT_NAME: str = "Vue FastAPI Admin"
-    APP_DESCRIPTION: str = "Description"
+    model_config = SettingsConfigDict(
+        env_prefix="",
+        validate_assignment=True,
+        env_file='.env',
+        env_file_encoding='utf-8',
+        extra='allow'
+    )
+    
+    # 基础配置
+    VERSION: str = "1.0.0"
+    APP_TITLE: str = "FastAPI Boilerplate"
+    PROJECT_NAME: str = "fastapi-boilerplate"
+    APP_DESCRIPTION: str = "FastAPI Boilerplate"
 
-    CORS_ORIGINS: typing.List = ["*"]
+    # CORS配置
+    CORS_ORIGINS: typing.List[str] = ["*"]
     CORS_ALLOW_CREDENTIALS: bool = True
-    CORS_ALLOW_METHODS: typing.List = ["*"]
-    CORS_ALLOW_HEADERS: typing.List = ["*"]
+    CORS_ALLOW_METHODS: typing.List[str] = ["*"]
+    CORS_ALLOW_HEADERS: typing.List[str] = ["*"]
 
     DEBUG: bool = True
 
+    # 路径配置
     PROJECT_ROOT: str = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
     BASE_DIR: str = os.path.abspath(os.path.join(PROJECT_ROOT, os.pardir))
     LOGS_ROOT: str = os.path.join(BASE_DIR, "app/logs")
-    SECRET_KEY: str = "3488a63e1765035d386f05409663f55c83bfae3b3c61a932744b20ad14244dcf"  # openssl rand -hex 32
-    JWT_ALGORITHM: str = "HS256"
-    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 day
-    TORTOISE_ORM: dict = {
-        "connections": {
-            # SQLite configuration
+
+    # JWT配置
+    SECRET_KEY: str
+    JWT_ALGORITHM: str
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int
+
+    # 数据库配置
+    @property
+    def TORTOISE_ORM(self) -> dict:
+        connections = {
             "sqlite": {
                 "engine": "tortoise.backends.sqlite",
-                "credentials": {"file_path": f"{BASE_DIR}/db.sqlite3"},  # Path to SQLite database file
+                "credentials": {"file_path": f"{self.BASE_DIR}/db.sqlite3"},
+            }
+        }
+        
+        return {
+            "connections": connections,
+            "apps": {
+                "models": {
+                    "models": ["app.models", "aerich.models"],
+                    "default_connection": "sqlite",
+                },
             },
-            # MySQL/MariaDB configuration
-            # Install with: tortoise-orm[asyncmy]
-            # "mysql": {
-            #     "engine": "tortoise.backends.mysql",
-            #     "credentials": {
-            #         "host": "localhost",  # Database host address
-            #         "port": 3306,  # Database port
-            #         "user": "yourusername",  # Database username
-            #         "password": "yourpassword",  # Database password
-            #         "database": "yourdatabase",  # Database name
-            #     },
-            # },
-            # PostgreSQL configuration
-            # Install with: tortoise-orm[asyncpg]
-            # "postgres": {
-            #     "engine": "tortoise.backends.asyncpg",
-            #     "credentials": {
-            #         "host": "localhost",  # Database host address
-            #         "port": 5432,  # Database port
-            #         "user": "yourusername",  # Database username
-            #         "password": "yourpassword",  # Database password
-            #         "database": "yourdatabase",  # Database name
-            #     },
-            # },
-            # MSSQL/Oracle configuration
-            # Install with: tortoise-orm[asyncodbc]
-            # "oracle": {
-            #     "engine": "tortoise.backends.asyncodbc",
-            #     "credentials": {
-            #         "host": "localhost",  # Database host address
-            #         "port": 1433,  # Database port
-            #         "user": "yourusername",  # Database username
-            #         "password": "yourpassword",  # Database password
-            #         "database": "yourdatabase",  # Database name
-            #     },
-            # },
-            # SQLServer configuration
-            # Install with: tortoise-orm[asyncodbc]
-            # "sqlserver": {
-            #     "engine": "tortoise.backends.asyncodbc",
-            #     "credentials": {
-            #         "host": "localhost",  # Database host address
-            #         "port": 1433,  # Database port
-            #         "user": "yourusername",  # Database username
-            #         "password": "yourpassword",  # Database password
-            #         "database": "yourdatabase",  # Database name
-            #     },
-            # },
-        },
-        "apps": {
-            "models": {
-                "models": ["app.models", "aerich.models"],
-                "default_connection": "sqlite",
-            },
-        },
-        "use_tz": False,  # Whether to use timezone-aware datetimes
-        "timezone": "Asia/Shanghai",  # Timezone setting
-    }
-    DATETIME_FORMAT: str = "%Y-%m-%d %H:%M:%S"
+            "use_tz": False,
+            "timezone": "Asia/Shanghai",
+        }
+
+    DATETIME_FORMAT: str
+
+    # Redis配置
+    REDIS_HOST: str
+    REDIS_PORT: int
+    REDIS_DB: int
+    REDIS_PASSWORD: str
+    REDIS_MAX_CONNECTIONS: int = 100
 
 
 settings = Settings()
